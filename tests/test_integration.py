@@ -1,45 +1,37 @@
 """
-Интеграционные тесты (требуют реальный API-ключ Vulners).
+Интеграционные тесты (с реальными запросами к NVD NIST API).
 
 Запускаются отдельно: pytest tests/test_integration.py -v
 """
 
-import os
-
-import pytest
-
-from constants import VulnersConfig
+from constants import NvdConfig
 from vulners_client import fetch_vulnerabilities, filter_critical
 
-pytestmark = pytest.mark.skipif(
-    not os.environ.get(VulnersConfig.API_KEY_ENV_VAR),
-    reason=f"Требуется {VulnersConfig.API_KEY_ENV_VAR} для интеграционных тестов",
-)
 
+class TestNvdIntegration:
+    """Интеграционные тесты NVD NIST API."""
 
-class TestVulnersIntegration:
-    """Интеграционные тесты Vulners API."""
-
-    @pytest.fixture
-    def api_key(self):
-        return os.environ[VulnersConfig.API_KEY_ENV_VAR]
-
-    def test_fetch_returns_results(self, api_key):
-        result = fetch_vulnerabilities(api_key, limit=5)
+    def test_fetch_returns_results(self):
+        result = fetch_vulnerabilities(severity="CRITICAL", limit=5)
 
         assert isinstance(result, list)
         assert len(result) > 0
 
-    def test_results_have_cvss(self, api_key):
-        result = fetch_vulnerabilities(api_key, limit=5)
+    def test_results_have_required_fields(self):
+        result = fetch_vulnerabilities(severity="CRITICAL", limit=5)
 
+        assert len(result) > 0, "API вернул пустой результат"
         for vuln in result:
+            assert "id" in vuln
             assert "cvss_score" in vuln
             assert isinstance(vuln["cvss_score"], (int, float))
+            assert vuln["id"].startswith("CVE-")
 
-    def test_filter_critical_works(self, api_key):
-        vulns = fetch_vulnerabilities(api_key, limit=10)
+    def test_filter_critical_works(self):
+        vulns = fetch_vulnerabilities(severity="CRITICAL", limit=10)
+
+        assert len(vulns) > 0, "API вернул пустой результат"
         critical = filter_critical(vulns)
 
         for vuln in critical:
-            assert vuln["cvss_score"] >= VulnersConfig.CRITICAL_CVSS_THRESHOLD
+            assert vuln["cvss_score"] >= NvdConfig.CRITICAL_CVSS_THRESHOLD

@@ -1,21 +1,16 @@
 """
-Модуль для работы с Vulners API.
+Модуль для работы с NVD NIST API (National Vulnerability Database).
 
 Выполняет поиск уязвимостей (CVE) с высоким CVSS-баллом
-через Vulners API v3.
+через NVD API 2.0 (https://nvd.nist.gov/).
 """
 
 import logging
-import os
-from pathlib import Path
 
 import requests
-from dotenv import load_dotenv
 from requests.exceptions import RequestException
 
-from constants import Messages, VulnersConfig
-
-load_dotenv(Path(__file__).parent / ".env")
+from constants import Messages, NvdConfig
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,71 +20,78 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_api_key() -> str | None:
-    """Получает API ключ Vulners из переменной окружения."""
-    api_key = os.environ.get(VulnersConfig.API_KEY_ENV_VAR)
-    if not api_key:
-        logger.warning("API ключ не задан: %s", VulnersConfig.API_KEY_ENV_VAR)
-        return None
-    return api_key
+def _extract_cvss_score(metrics: dict) -> float:
+    """Извлекает CVSS-балл из метрик NVD."""
+    for key in ("cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
+        metric_list = metrics.get(key, [])
+        if metric_list:
+            return metric_list[0].get("cvssData", {}).get("baseScore", 0.0)
+    return 0.0
+
+
+def _extract_description(descriptions: list[dict]) -> str:
+    """Извлекает английское описание CVE."""
+    for desc in descriptions:
+        if desc.get("lang") == "en":
+            return desc.get("value", "")[:200]
+    return descriptions[0].get("value", "")[:200] if descriptions else ""
 
 
 def fetch_vulnerabilities(
-    api_key: str,
-    query: str = VulnersConfig.DEFAULT_QUERY,
-    limit: int = VulnersConfig.DEFAULT_LIMIT,
+    severity: str = NvdConfig.DEFAULT_SEVERITY,
+    limit: int = NvdConfig.DEFAULT_LIMIT,
 ) -> list[dict]:
     """
-    Ищет уязвимости через Vulners API.
+    Ищет уязвимости через NVD NIST API 2.0.
 
     Args:
-        api_key: API ключ Vulners.
-        query: Поисковый запрос (Lucene-синтаксис).
+        severity: Уровень критичности (LOW, MEDIUM, HIGH, CRITICAL).
         limit: Максимальное количество результатов.
 
     Returns:
         Список найденных уязвимостей.
     """
-    url = f"{VulnersConfig.BASE_URL}{VulnersConfig.SEARCH_ENDPOINT}"
-    payload = {"query": query, "skip": 0, "size": limit, "apiKey": api_key}
+    params = {
+        "cvssV3Severity": severity,
+        "resultsPerPage": limit,
+    }
 
     try:
-        response = requests.post(url, json=payload, timeout=VulnersConfig.REQUEST_TIMEOUT)
+        response = requests.get(
+            NvdConfig.BASE_URL, params=params, timeout=NvdConfig.REQUEST_TIMEOUT
+        )
         response.raise_for_status()
         data = response.json()
 
-        if data.get("result") != "OK":
-            logger.error("API вернул ошибку: %s", data.get("data", {}).get("error"))
-            return []
-
-        search_results = data.get("data", {}).get("search", [])
+        raw_vulns = data.get("vulnerabilities", [])
         vulnerabilities = []
 
-        for item in search_results:
-            source = item.get("_source", {})
-            cvss_score = source.get("cvss", {}).get("score", 0)
+        for item in raw_vulns:
+            cve = item.get("cve", {})
+            metrics = cve.get("metrics", {})
+            cvss_score = _extract_cvss_score(metrics)
             vuln = {
-                "id": source.get("id", "N/A"),
-                "title": source.get("title", "N/A"),
+                "id": cve.get("id", "N/A"),
+                "title": cve.get("id", "N/A"),
                 "cvss_score": cvss_score,
-                "description": source.get("description", "")[:200],
-                "published": source.get("published", "N/A"),
-                "type": source.get("type", "N/A"),
+                "description": _extract_description(cve.get("descriptions", [])),
+                "published": cve.get("published", "N/A"),
+                "type": "cve",
             }
             vulnerabilities.append(vuln)
 
-        logger.info("Найдено %d уязвимостей", len(vulnerabilities))
+        logger.info("Найдено %d уязвимостей через NVD API", len(vulnerabilities))
         return vulnerabilities
 
     except RequestException as e:
-        logger.exception("Ошибка запроса к Vulners API: %s", e)
-        print(Messages.FETCH_ERROR.format(error=e))
+        logger.exception("Ошибка запроса к NVD API: %s", e)
+        print(Messages.NVD_FETCH_ERROR.format(error=e))
         return []
 
 
 def filter_critical(
     vulnerabilities: list[dict],
-    threshold: float = VulnersConfig.CRITICAL_CVSS_THRESHOLD,
+    threshold: float = NvdConfig.CRITICAL_CVSS_THRESHOLD,
 ) -> list[dict]:
     """Фильтрует уязвимости по CVSS-баллу >= threshold."""
     critical = [v for v in vulnerabilities if v.get("cvss_score", 0) >= threshold]

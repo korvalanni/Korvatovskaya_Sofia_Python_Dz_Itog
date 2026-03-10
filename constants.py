@@ -1,15 +1,13 @@
 """Общие константы приложения."""
 
 
-class VulnersConfig:
-    """Конфигурация Vulners API."""
+class NvdConfig:
+    """Конфигурация NVD NIST API (National Vulnerability Database)."""
 
-    API_KEY_ENV_VAR = "VULNERS_API_KEY"
-    BASE_URL = "https://vulners.com/api/v3"
-    SEARCH_ENDPOINT = "/search/lucene/"
-    REQUEST_TIMEOUT = 15
+    BASE_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+    REQUEST_TIMEOUT = 30
     CRITICAL_CVSS_THRESHOLD = 7.0
-    DEFAULT_QUERY = "type:cve AND cvss.score:[7 TO 10]"
+    DEFAULT_SEVERITY = "CRITICAL"
     DEFAULT_LIMIT = 20
 
 
@@ -33,8 +31,7 @@ class ReportConfig:
 class Messages:
     """Сообщения для пользователя."""
 
-    MISSING_API_KEY = "[!] API ключ не задан в переменной {env_var}"
-    API_KEY_HINT = "    Получить ключ: https://vulners.com -> Личный кабинет -> API Key"
+    NVD_FETCH_ERROR = "[!] Ошибка при запросе к NVD API: {error}"
     FETCH_ERROR = "[!] Ошибка при запросе к API: {error}"
     LOG_LOAD_ERROR = "[!] Не удалось загрузить логи: {error}"
     THREAT_FOUND = "[ALERT] Обнаружена угроза: {description}"

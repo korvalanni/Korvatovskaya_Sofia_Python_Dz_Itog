@@ -1,131 +1,126 @@
-"""Тесты для модуля работы с Vulners API."""
+"""Тесты для модуля работы с NVD NIST API."""
 
 import requests.exceptions
 import responses
 
-from constants import VulnersConfig
-from vulners_client import fetch_vulnerabilities, filter_critical, get_api_key
+from constants import NvdConfig
+from vulners_client import fetch_vulnerabilities, filter_critical
 
-MOCK_VULNERS_RESPONSE = {
-    "result": "OK",
-    "data": {
-        "search": [
-            {
-                "_source": {
-                    "id": "CVE-2024-1234",
-                    "title": "Critical RCE in Example Software",
-                    "cvss": {"score": 9.8},
-                    "description": "Remote code execution vulnerability",
-                    "published": "2024-01-15",
-                    "type": "cve",
-                }
-            },
-            {
-                "_source": {
-                    "id": "CVE-2024-5678",
-                    "title": "SQL Injection in Web Framework",
-                    "cvss": {"score": 7.5},
-                    "description": "SQL injection allows data access",
-                    "published": "2024-02-20",
-                    "type": "cve",
-                }
-            },
-            {
-                "_source": {
-                    "id": "CVE-2024-9999",
-                    "title": "Low severity info disclosure",
-                    "cvss": {"score": 3.1},
-                    "description": "Information disclosure via error messages",
-                    "published": "2024-03-01",
-                    "type": "cve",
-                }
-            },
-        ]
-    },
+MOCK_NVD_RESPONSE = {
+    "resultsPerPage": 3,
+    "startIndex": 0,
+    "totalResults": 3,
+    "format": "NVD_CVE",
+    "version": "2.0",
+    "vulnerabilities": [
+        {
+            "cve": {
+                "id": "CVE-2024-1234",
+                "descriptions": [{"lang": "en", "value": "Remote code execution vulnerability"}],
+                "metrics": {
+                    "cvssMetricV31": [
+                        {
+                            "cvssData": {
+                                "baseScore": 9.8,
+                                "baseSeverity": "CRITICAL",
+                            }
+                        }
+                    ]
+                },
+                "published": "2024-01-15T00:00:00.000",
+            }
+        },
+        {
+            "cve": {
+                "id": "CVE-2024-5678",
+                "descriptions": [{"lang": "en", "value": "SQL injection allows data access"}],
+                "metrics": {
+                    "cvssMetricV31": [
+                        {
+                            "cvssData": {
+                                "baseScore": 7.5,
+                                "baseSeverity": "HIGH",
+                            }
+                        }
+                    ]
+                },
+                "published": "2024-02-20T00:00:00.000",
+            }
+        },
+        {
+            "cve": {
+                "id": "CVE-2024-9999",
+                "descriptions": [
+                    {"lang": "en", "value": "Information disclosure via error messages"}
+                ],
+                "metrics": {
+                    "cvssMetricV31": [
+                        {
+                            "cvssData": {
+                                "baseScore": 3.1,
+                                "baseSeverity": "LOW",
+                            }
+                        }
+                    ]
+                },
+                "published": "2024-03-01T00:00:00.000",
+            }
+        },
+    ],
 }
 
 
-class TestGetApiKey:
-    """Тесты получения API ключа."""
-
-    def test_key_from_env(self, monkeypatch):
-        monkeypatch.setenv(VulnersConfig.API_KEY_ENV_VAR, "test_key_123")
-
-        result = get_api_key()
-
-        assert result == "test_key_123"
-
-    def test_missing_key(self, monkeypatch):
-        monkeypatch.delenv(VulnersConfig.API_KEY_ENV_VAR, raising=False)
-
-        result = get_api_key()
-
-        assert result is None
-
-    def test_empty_key(self, monkeypatch):
-        monkeypatch.setenv(VulnersConfig.API_KEY_ENV_VAR, "")
-
-        result = get_api_key()
-
-        assert result is None
-
-
 class TestFetchVulnerabilities:
-    """Тесты запроса уязвимостей."""
+    """Тесты запроса уязвимостей через NVD API."""
 
     @responses.activate
     def test_successful_fetch(self):
-        url = f"{VulnersConfig.BASE_URL}{VulnersConfig.SEARCH_ENDPOINT}"
-        responses.add(responses.POST, url, json=MOCK_VULNERS_RESPONSE, status=200)
+        responses.add(responses.GET, NvdConfig.BASE_URL, json=MOCK_NVD_RESPONSE, status=200)
 
-        result = fetch_vulnerabilities("test_key")
+        result = fetch_vulnerabilities()
 
         assert len(result) == 3
         assert result[0]["id"] == "CVE-2024-1234"
         assert result[0]["cvss_score"] == 9.8
 
     @responses.activate
-    def test_api_error_response(self):
-        url = f"{VulnersConfig.BASE_URL}{VulnersConfig.SEARCH_ENDPOINT}"
+    def test_empty_response(self):
         responses.add(
-            responses.POST,
-            url,
-            json={"result": "error", "data": {"error": "Invalid API key"}},
+            responses.GET,
+            NvdConfig.BASE_URL,
+            json={"vulnerabilities": [], "totalResults": 0},
             status=200,
         )
 
-        result = fetch_vulnerabilities("bad_key")
+        result = fetch_vulnerabilities()
 
         assert result == []
 
     @responses.activate
     def test_network_error(self, capsys):
-        url = f"{VulnersConfig.BASE_URL}{VulnersConfig.SEARCH_ENDPOINT}"
         responses.add(
-            responses.POST,
-            url,
+            responses.GET,
+            NvdConfig.BASE_URL,
             body=requests.exceptions.ConnectionError("timeout"),
         )
 
-        result = fetch_vulnerabilities("test_key")
+        result = fetch_vulnerabilities()
 
         assert result == []
 
     @responses.activate
     def test_http_error(self):
-        url = f"{VulnersConfig.BASE_URL}{VulnersConfig.SEARCH_ENDPOINT}"
-        responses.add(responses.POST, url, status=500)
+        responses.add(responses.GET, NvdConfig.BASE_URL, status=500)
 
-        result = fetch_vulnerabilities("test_key")
+        result = fetch_vulnerabilities()
 
         assert result == []
 
     @responses.activate
     def test_parses_all_fields(self):
-        url = f"{VulnersConfig.BASE_URL}{VulnersConfig.SEARCH_ENDPOINT}"
-        responses.add(responses.POST, url, json=MOCK_VULNERS_RESPONSE, status=200)
+        responses.add(responses.GET, NvdConfig.BASE_URL, json=MOCK_NVD_RESPONSE, status=200)
 
-        result = fetch_vulnerabilities("test_key")
+        result = fetch_vulnerabilities()
 
         vuln = result[0]
         assert "id" in vuln
@@ -133,6 +128,23 @@ class TestFetchVulnerabilities:
         assert "cvss_score" in vuln
         assert "description" in vuln
         assert "published" in vuln
+
+    @responses.activate
+    def test_extracts_english_description(self):
+        responses.add(responses.GET, NvdConfig.BASE_URL, json=MOCK_NVD_RESPONSE, status=200)
+
+        result = fetch_vulnerabilities()
+
+        assert result[0]["description"] == "Remote code execution vulnerability"
+
+    @responses.activate
+    def test_request_params(self):
+        responses.add(responses.GET, NvdConfig.BASE_URL, json=MOCK_NVD_RESPONSE, status=200)
+
+        fetch_vulnerabilities(severity="HIGH", limit=5)
+
+        assert "cvssV3Severity=HIGH" in responses.calls[0].request.url
+        assert "resultsPerPage=5" in responses.calls[0].request.url
 
 
 class TestFilterCritical:

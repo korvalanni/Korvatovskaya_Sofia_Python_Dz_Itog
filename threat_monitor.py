@@ -1,12 +1,12 @@
 """
 Главный модуль: автоматизированный мониторинг и реагирование на угрозы.
 
-Объединяет данные из двух источников (Vulners API + логи Suricata),
+Объединяет данные из двух источников (NVD NIST API + логи Suricata),
 выявляет угрозы, имитирует реагирование и формирует отчёты с графиками.
 
 Описание работы скрипта:
 1. Загружает логи Suricata (JSON) — извлекает алерты и DNS-запросы.
-2. Запрашивает уязвимости с высоким CVSS через Vulners API.
+2. Запрашивает уязвимости с высоким CVSS через NVD NIST API.
 3. Анализирует данные: находит подозрительные IP и критические CVE.
 4. Реагирует на угрозы: имитирует блокировку IP и отправку уведомлений.
 5. Сохраняет отчёт в JSON и CSV.
@@ -26,7 +26,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from constants import UI, LogConfig, Messages, ReportConfig, VulnersConfig  # noqa: E402
+from constants import UI, LogConfig, Messages, ReportConfig  # noqa: E402
 from log_analyzer import (  # noqa: E402
     extract_alerts,
     extract_dns_queries,
@@ -34,7 +34,7 @@ from log_analyzer import (  # noqa: E402
     find_suspicious_ips,
     load_logs,
 )
-from vulners_client import fetch_vulnerabilities, filter_critical, get_api_key  # noqa: E402
+from vulners_client import fetch_vulnerabilities, filter_critical  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -322,16 +322,9 @@ def main() -> int:
     suspicious_ips = find_suspicious_ips(alerts_df)
     suspicious_dns = find_suspicious_dns(dns_df)
 
-    # --- Источник 2: Vulners API ---
-    print("[2/4] Запрос уязвимостей через Vulners API...")
-    api_key = get_api_key()
-    vulnerabilities = []
-    if api_key:
-        vulnerabilities = fetch_vulnerabilities(api_key)
-    else:
-        print(Messages.MISSING_API_KEY.format(env_var=VulnersConfig.API_KEY_ENV_VAR))
-        print(Messages.API_KEY_HINT)
-        print("      Продолжаем анализ только на основе логов...")
+    # --- Источник 2: NVD NIST API ---
+    print("[2/4] Запрос уязвимостей через NVD NIST API...")
+    vulnerabilities = fetch_vulnerabilities()
 
     critical_vulns = filter_critical(vulnerabilities)
 

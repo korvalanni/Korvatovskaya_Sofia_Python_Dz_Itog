@@ -9,7 +9,7 @@
 Инструмент на Python для автоматизированного мониторинга угроз информационной безопасности:
 
 1. **Сбор данных** из двух источников:
-   - **Vulners API** — поиск CVE-уязвимостей с высоким CVSS-баллом
+   - **NVD NIST API** — поиск CVE-уязвимостей с высоким CVSS-баллом (National Vulnerability Database)
    - **Логи Suricata** — анализ сетевых алертов и DNS-запросов
 
 2. **Анализ данных**:
@@ -32,12 +32,12 @@
 ├── logs/suricata_sample.json      # Пример логов Suricata
 ├── tests/                         # Тесты (pytest)
 │   ├── test_log_analyzer.py       # Тесты анализа логов
-│   ├── test_vulners_client.py     # Тесты клиента Vulners API
+│   ├── test_vulners_client.py     # Тесты клиента NVD API
 │   ├── test_threat_monitor.py     # Тесты главного модуля
 │   └── test_integration.py        # Интеграционные тесты (реальный API)
 ├── constants.py                   # Константы и сообщения
 ├── log_analyzer.py                # Анализ логов Suricata
-├── vulners_client.py              # Клиент Vulners API
+├── vulners_client.py              # Клиент NVD NIST API
 ├── threat_monitor.py              # Главный скрипт
 ├── requirements.txt               # Зависимости
 ├── pyproject.toml                 # Конфигурация проекта
@@ -55,11 +55,7 @@ source .venv/bin/activate  # Linux/Mac
 # Установка зависимостей
 pip install -r requirements.txt
 
-# Настройка API-ключа (опционально)
-# Создайте файл .env и укажите ключ:
-echo "VULNERS_API_KEY=ваш_ключ" > .env
-
-# Запуск
+# Запуск (API-ключ не требуется, NVD API бесплатный)
 python threat_monitor.py
 ```
 
@@ -69,7 +65,7 @@ python threat_monitor.py
 # Unit-тесты
 pytest --ignore=tests/test_integration.py
 
-# Все тесты (с API-ключом)
+# Все тесты (включая реальные API-запросы)
 pytest
 
 # С покрытием
@@ -81,4 +77,4 @@ pytest --cov=. --ignore=tests/test_integration.py
 GitHub Actions автоматически запускает при push/PR:
 1. **Lint** — проверка кода через ruff
 2. **Unit tests** — тесты на Python 3.10 и 3.12
-3. **Integration tests** — тесты с реальным API (только push в main)
+3. **Integration tests** — тесты с реальным NVD API (только push в main)
