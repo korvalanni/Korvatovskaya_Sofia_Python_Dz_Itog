@@ -1,0 +1,176 @@
+[
+  {
+    "timestamp": "2026-03-10T08:12:01.000000+0000",
+    "event_type": "alert",
+    "src_ip": "192.168.1.105",
+    "dest_ip": "10.0.0.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET MALWARE Possible Malicious Payload Download",
+      "severity": 1,
+      "category": "Malware"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:12:05.000000+0000",
+    "event_type": "dns",
+    "src_ip": "192.168.1.105",
+    "dest_ip": "8.8.8.8",
+    "proto": "UDP",
+    "dns": {
+      "type": "query",
+      "rrname": "malicious-domain.xyz"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:12:10.000000+0000",
+    "event_type": "alert",
+    "src_ip": "192.168.1.200",
+    "dest_ip": "10.0.0.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET SCAN Nmap Scripting Engine User-Agent Detected",
+      "severity": 2,
+      "category": "Attempted Information Leak"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:13:01.000000+0000",
+    "event_type": "dns",
+    "src_ip": "192.168.1.105",
+    "dest_ip": "8.8.8.8",
+    "proto": "UDP",
+    "dns": {
+      "type": "query",
+      "rrname": "c2-server.evil.com"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:13:15.000000+0000",
+    "event_type": "alert",
+    "src_ip": "192.168.1.105",
+    "dest_ip": "10.0.0.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET TROJAN Possible C2 Communication",
+      "severity": 1,
+      "category": "A Network Trojan was Detected"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:14:00.000000+0000",
+    "event_type": "dns",
+    "src_ip": "192.168.1.50",
+    "dest_ip": "8.8.4.4",
+    "proto": "UDP",
+    "dns": {
+      "type": "query",
+      "rrname": "google.com"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:14:30.000000+0000",
+    "event_type": "alert",
+    "src_ip": "10.10.10.55",
+    "dest_ip": "192.168.1.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET EXPLOIT Possible SQL Injection Attempt",
+      "severity": 1,
+      "category": "Web Application Attack"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:15:00.000000+0000",
+    "event_type": "alert",
+    "src_ip": "10.10.10.55",
+    "dest_ip": "192.168.1.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET EXPLOIT Possible XSS Attempt",
+      "severity": 2,
+      "category": "Web Application Attack"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:15:30.000000+0000",
+    "event_type": "dns",
+    "src_ip": "192.168.1.105",
+    "dest_ip": "8.8.8.8",
+    "proto": "UDP",
+    "dns": {
+      "type": "query",
+      "rrname": "phishing-site.net"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:16:00.000000+0000",
+    "event_type": "alert",
+    "src_ip": "192.168.1.105",
+    "dest_ip": "203.0.113.10",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET MALWARE Ransomware Beacon Detected",
+      "severity": 1,
+      "category": "Malware"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:16:30.000000+0000",
+    "event_type": "alert",
+    "src_ip": "192.168.1.200",
+    "dest_ip": "10.0.0.5",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET SCAN Potential SSH Brute Force",
+      "severity": 2,
+      "category": "Attempted Information Leak"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:17:00.000000+0000",
+    "event_type": "dns",
+    "src_ip": "192.168.1.200",
+    "dest_ip": "8.8.8.8",
+    "proto": "UDP",
+    "dns": {
+      "type": "query",
+      "rrname": "suspicious-tracker.io"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:17:30.000000+0000",
+    "event_type": "alert",
+    "src_ip": "172.16.0.99",
+    "dest_ip": "192.168.1.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET POLICY Outbound DNS Query to External Resolver",
+      "severity": 3,
+      "category": "Potentially Bad Traffic"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:18:00.000000+0000",
+    "event_type": "dns",
+    "src_ip": "192.168.1.50",
+    "dest_ip": "8.8.4.4",
+    "proto": "UDP",
+    "dns": {
+      "type": "query",
+      "rrname": "github.com"
+    }
+  },
+  {
+    "timestamp": "2026-03-10T08:18:30.000000+0000",
+    "event_type": "alert",
+    "src_ip": "10.10.10.55",
+    "dest_ip": "192.168.1.1",
+    "proto": "TCP",
+    "alert": {
+      "signature": "ET EXPLOIT Possible Directory Traversal",
+      "severity": 1,
+      "category": "Web Application Attack"
+    }
+  }
+]

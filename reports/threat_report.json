@@ -1,0 +1,64 @@
+{
+    "report_date": "2026-03-10T15:49:30.106664+00:00",
+    "summary": {
+        "total_alerts": 9,
+        "unique_source_ips": 4,
+        "suspicious_ips_count": 3,
+        "suspicious_dns_count": 1,
+        "critical_vulnerabilities": 0,
+        "response_actions_taken": 3
+    },
+    "alert_categories": {
+        "Web Application Attack": 3,
+        "Malware": 2,
+        "Attempted Information Leak": 2,
+        "A Network Trojan was Detected": 1,
+        "Potentially Bad Traffic": 1
+    },
+    "suspicious_ips": [
+        {
+            "ip": "192.168.1.105",
+            "alert_count": 3
+        },
+        {
+            "ip": "10.10.10.55",
+            "alert_count": 3
+        },
+        {
+            "ip": "192.168.1.200",
+            "alert_count": 2
+        }
+    ],
+    "suspicious_dns": [
+        {
+            "ip": "192.168.1.105",
+            "query_count": 3,
+            "domains": [
+                "phishing-site.net",
+                "c2-server.evil.com",
+                "malicious-domain.xyz"
+            ]
+        }
+    ],
+    "top_vulnerabilities": [],
+    "response_actions": [
+        {
+            "action": "block_ip",
+            "ip": "192.168.1.105",
+            "reason": "Высокоприоритетные алерты: 3",
+            "timestamp": "2026-03-10T15:49:30.106433+00:00"
+        },
+        {
+            "action": "block_ip",
+            "ip": "10.10.10.55",
+            "reason": "Высокоприоритетные алерты: 3",
+            "timestamp": "2026-03-10T15:49:30.106443+00:00"
+        },
+        {
+            "action": "block_ip",
+            "ip": "192.168.1.200",
+            "reason": "Высокоприоритетные алерты: 2",
+            "timestamp": "2026-03-10T15:49:30.106446+00:00"
+        }
+    ]
+}

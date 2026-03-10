@@ -1,0 +1,5 @@
+type,identifier,detail,severity
+suspicious_ip,192.168.1.105,alerts: 3,high
+suspicious_ip,10.10.10.55,alerts: 3,high
+suspicious_ip,192.168.1.200,alerts: 2,high
+suspicious_dns,192.168.1.105,queries: 3,medium
